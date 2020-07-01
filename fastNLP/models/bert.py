@@ -61,26 +61,15 @@ class BertForSequenceClassification(BaseModel):
         self.dropout = nn.Dropout(p=dropout)
         self.classifier = nn.Linear(self.bert.embedding_dim, num_labels)
 
-        if not self.bert.model.include_cls_sep:
-            self.bert.model.include_cls_sep = True
-            warn_msg = "Bert for sequence classification excepts BertEmbedding `include_cls_sep` True, " \
-                       "but got False. FastNLP has changed it to True."
-            logger.warning(warn_msg)
-            warnings.warn(warn_msg)
-
-    def forward(self, words):
+    def forward(self, words, offsets):
         r"""
         输入为 [[w1, w2, w3, ...], [...]], BERTEmbedding会在开头和结尾额外加入[CLS]与[SEP]
         :param torch.LongTensor words: [batch_size, seq_len]
         :return: { :attr:`fastNLP.Const.OUTPUT` : logits}: torch.Tensor [batch_size, num_labels]
         """
-        hidden = self.dropout(self.bert(words))
-        cls_hidden = hidden[:, 0]
-        logits = self.classifier(cls_hidden)
-        if logits.size(-1) == 1:
-            logits = logits.squeeze(-1)
-
-        return {Const.OUTPUT: logits}
+        hidden = self.dropout(self.bert(words, offsets))
+        logits = self.classifier(hidden)
+        return logits
 
     def predict(self, words):
         r"""
