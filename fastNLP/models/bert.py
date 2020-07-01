@@ -35,7 +35,7 @@ import warnings
 
 import torch
 from torch import nn
-
+from torch import Tensor
 from .base_model import BaseModel
 from ..core._logger import logger
 from ..core.const import Const
@@ -61,7 +61,7 @@ class BertForSequenceClassification(BaseModel):
         self.dropout = nn.Dropout(p=dropout)
         self.classifier = nn.Linear(self.bert.embedding_dim, num_labels)
 
-    def forward(self, words, offsets):
+    def forward(self, words: Tensor, offsets: Tensor) -> Tensor:
         r"""
         输入为 [[w1, w2, w3, ...], [...]], BERTEmbedding会在开头和结尾额外加入[CLS]与[SEP]
         :param torch.LongTensor words: [batch_size, seq_len]

@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(description='Train a text classification model 
 parser.add_argument('--batch-size', type=int, default=16, help='batch size (default=16)')
 parser.add_argument('--embed-dim', type=int, default=32, help='embed dim. (default=32)')
 parser.add_argument('--epochs', type=int, default=5, help='num epochs (default=5)')
+parser.add_argument('--torchscript', type=bool, default=False, help='torchscript the model')
 args = parser.parse_args()
 
 embed_dim = args.embed_dim
@@ -21,6 +22,10 @@ BATCH_SIZE = args.batch_size
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 bert_embed = torch.nn.EmbeddingBag(len(train_dataset.vocab), embed_dim)
 model = BertForSequenceClassification(bert_embed, num_labels=4).to(device)
+
+if args.torchscript:
+    model = torch.jit.script(model)
+    print("model are torchscript")
 
 
 def generate_batch(batch):
