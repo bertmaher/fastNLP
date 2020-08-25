@@ -38,4 +38,4 @@ if __name__ == '__main__':
     pip_install_requirements()
     setup_install()
     # FIXME: AG_NEWS isn't working for some reason
-    preprocess_data()
+    # preprocess_data()
