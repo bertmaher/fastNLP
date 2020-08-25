@@ -8,6 +8,8 @@ from torch.utils.data.dataset import random_split
 import argparse
 import random
 import numpy as np
+import pickle
+import os
 
 torch.manual_seed(1337)
 random.seed(1337)
@@ -15,31 +17,20 @@ np.random.seed(1337)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
-def generate_batch(batch):
-    label = torch.tensor([entry[0] for entry in batch])
-    text = [entry[1] for entry in batch]
-    offsets = [0] + [len(entry) for entry in text]
-    # torch.Tensor.cumsum returns the cumulative sum
-    # of elements in the dimension dim.
-    # torch.Tensor([1.0, 2.0, 3.0]).cumsum(dim=0)
-    offsets = torch.tensor(offsets[:-1]).cumsum(dim=0)
-    text = torch.cat(text)
-    return text, offsets, label - 1
-
 class Model:
     def __init__(self, device=None, jit=False):
         self.device = device
         self.jit = jit
 
-        batch_size = 32
         embed_dim = 64
         epochs = 5
         num_labels = 4
 
-        # TODO: Can we cache this in setup?
-        train_dataset, _ = AG_NEWS(ngrams=1)
+        with open("example_batch.pkl", "rb") as f:
+            batch_size, vocab_size, text, offsets, cls = pickle.load(f)
+        self.text, self.offsets, self.cls = [t.to(self.device) for t in (text, offsets, cls)]
 
-        bert_embed = torch.nn.EmbeddingBag(len(train_dataset.vocab), embed_dim)
+        bert_embed = torch.nn.EmbeddingBag(vocab_size, embed_dim)
         self.model = BertForSequenceClassification(bert_embed, num_labels=num_labels).to(self.device)
 
         if self.jit:
@@ -48,9 +39,6 @@ class Model:
         self.criterion = torch.nn.CrossEntropyLoss().to(device)
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=4.0)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 1, gamma=0.9)
-
-        data = DataLoader(train_dataset, batch_size=batch_size, collate_fn=generate_batch)
-        self.text, self.offsets, self.cls = [x.to(self.device) for x in next(iter(data))]
 
     def get_module(self):
         return self.model, (self.text, self.offsets)
