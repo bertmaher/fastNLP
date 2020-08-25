@@ -8,6 +8,8 @@ from torch.utils.data.dataset import random_split
 import argparse
 import random
 import numpy as np
+import pickle
+import os
 
 torch.manual_seed(1337)
 random.seed(1337)
@@ -49,8 +51,8 @@ class Model:
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=4.0)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 1, gamma=0.9)
 
-        data = DataLoader(train_dataset, batch_size=batch_size, collate_fn=generate_batch)
-        self.text, self.offsets, self.cls = [x.to(self.device) for x in next(iter(data))]
+        with open(os.path.join(".data", "data.pkl"), "rb") as f:
+            self.text, self.offsets, self.cls = [x.to(self.device) for x in pickle.load(f)]
 
     def get_module(self):
         return self.model, (self.text, self.offsets)
