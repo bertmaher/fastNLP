@@ -62,7 +62,8 @@ class Model:
         # self.scheduler.step()
 
 if __name__ == "__main__":
-    m = Model(device="cuda:0", jit=False)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    m = Model(device=device, jit=False)
     model, example_inputs = m.get_module()
     model(*example_inputs)
     m.train()

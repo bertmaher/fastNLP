@@ -32,10 +32,10 @@ def preprocess_data():
     with open("example_batch.pkl", "wb") as f:
         pickle.dump(
             (batch_size, vocab_size, text, offsets, cls),
-            f, pickle.HIGHEST_PROTOCOL)
+            f, pickle.DEFAULT_PROTOCOL)
 
 if __name__ == '__main__':
     pip_install_requirements()
     setup_install()
     # FIXME: AG_NEWS isn't working for some reason
-    # preprocess_data()
+    preprocess_data()
